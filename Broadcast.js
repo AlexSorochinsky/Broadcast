@@ -1,17 +1,18 @@
-//-----------------------------------------------------------------------------
+﻿//-----------------------------------------------------------------------------
 // Filename : Broadcast.js
 //-----------------------------------------------------------------------------
 // Language : Javascript
 // Author : Alex Sorochinsky
 // Date of creation : 08.08.2016
-// Require: 
 //-----------------------------------------------------------------------------
 // Javascript library which realizes observer pattern for both browser and server (Node.js) environment
 //-----------------------------------------------------------------------------
 
 //Main namespace for library use it for global events
 //Broadcast.on('My event', my_func, this); Broadcast.call('My event'); Broadcast.off('My event', this);
-var Broadcast = {};
+var Broadcast = {
+	isTouchDevice: (('ontouchstart' in window) || (navigator.MaxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0))
+};
 
 //Implement Broadcast methods to custom object
 Broadcast.make = function(object) {
@@ -231,3 +232,26 @@ Broadcast._prototype._call = function (caller, options, args) {
 	caller.apply(options.bind || this, args || []);
 
 };
+Broadcast.make(Broadcast);
+
+if (typeof window == 'object') {
+
+	if (Broadcast.isTouchDevice) {
+
+		document.addEventListener('touchend', function(e) {
+
+			Broadcast.call('Document Press Up', [e]);
+
+		});
+
+	} else {
+
+		document.addEventListener('mouseup', function(e) {
+
+			Broadcast.call('Document Press Up', [e]);
+
+		});
+
+	}
+
+}
