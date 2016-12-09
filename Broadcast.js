@@ -6,13 +6,11 @@
 // Date of creation : 08.08.2016
 //-----------------------------------------------------------------------------
 // Javascript library which realizes observer pattern for both browser and server (Node.js) environment
+// Broadcast.on('My event', my_func, this); Broadcast.call('My event'); Broadcast.off('My event', this);
 //-----------------------------------------------------------------------------
 
 //Main namespace for library use it for global events
-//Broadcast.on('My event', my_func, this); Broadcast.call('My event'); Broadcast.off('My event', this);
-var Broadcast = {
-	isTouchDevice: (('ontouchstart' in window) || (navigator.MaxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0))
-};
+var Broadcast = {};
 
 //Implement Broadcast methods to custom object
 Broadcast.make = function(object) {
@@ -62,6 +60,10 @@ Broadcast._prototype = {};
 
 Broadcast._prototype.on = function(name, caller, source, options) {
 
+	if (name.indexOf(',') != -1) name = _.map(name.split(','), function(name) {
+		return name.trim();
+	});
+
 	if (Array.isArray(name)) {
 
 		for (var i=0, l=name.length; i<l; i++) {
@@ -71,6 +73,8 @@ Broadcast._prototype.on = function(name, caller, source, options) {
 		}
 
 	} else {
+
+		name = name.toLowerCase();
 
 		if (!options) options = {};
 
@@ -136,6 +140,8 @@ Broadcast._prototype.off = function(name, source) {
 
 	} else {
 
+		name = name.toLowerCase();
+
 		var codename = (typeof source == 'string') ? source : this._getSourceCodename(source);
 
 		var callers = this._broadcast_events[name];
@@ -162,6 +168,8 @@ Broadcast._prototype.call = function(name, args, options, source) {
 		delete options.delay;
 
 	} else {
+
+		name = name.toLowerCase();
 
 		var subscriber, opt, callers = this._broadcast_events[name];
 
@@ -232,11 +240,20 @@ Broadcast._prototype._call = function (caller, options, args) {
 	caller.apply(options.bind || this, args || []);
 
 };
+
 Broadcast.make(Broadcast);
+
+Broadcast.isTouchDevice = (('ontouchstart' in window) || (navigator.MaxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
 
 if (typeof window == 'object') {
 
 	if (Broadcast.isTouchDevice) {
+
+		document.addEventListener('touchstart', function(e) {
+
+			Broadcast.call('Document Press Down', [e]);
+
+		});
 
 		document.addEventListener('touchend', function(e) {
 
@@ -244,7 +261,19 @@ if (typeof window == 'object') {
 
 		});
 
+		document.addEventListener('touchmove', function(e) {
+
+			Broadcast.call('Document Move', [e]);
+
+		});
+
 	} else {
+
+		document.addEventListener('mousedown', function(e) {
+
+			Broadcast.call('Document Press Down', [e]);
+
+		});
 
 		document.addEventListener('mouseup', function(e) {
 
@@ -252,6 +281,24 @@ if (typeof window == 'object') {
 
 		});
 
+		document.addEventListener('mousemove', function(e) {
+
+			Broadcast.call('Document Move', [e]);
+
+		});
+
+		document.addEventListener('wheel', function(e) {
+
+			Broadcast.call('Document Wheel', [e]);
+
+		});
+
 	}
+
+	document.addEventListener('keydown', function(e) {
+
+		Broadcast.call('Document Press Down', [e]);
+
+	});
 
 }
