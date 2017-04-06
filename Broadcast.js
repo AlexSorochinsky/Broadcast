@@ -82,9 +82,9 @@ Broadcast._prototype.on = function(name, caller, source, options) {
 
 		else if (source) {
 
-			options.index = this._getSourceCodename(source);
+			if (!options.index) options.index = this._getSourceCodename(source);
 
-			options.bind = source;
+			if (!options.bind) options.bind = source;
 
 		}
 
@@ -243,62 +243,4 @@ Broadcast._prototype._call = function (caller, options, args) {
 
 Broadcast.make(Broadcast);
 
-Broadcast.isTouchDevice = (('ontouchstart' in window) || (navigator.MaxTouchPoints > 0) || (navigator.msMaxTouchPoints > 0));
-
-if (typeof window == 'object') {
-
-	if (Broadcast.isTouchDevice) {
-
-		document.addEventListener('touchstart', function(e) {
-
-			Broadcast.call('Document Press Down', [e]);
-
-		});
-
-		document.addEventListener('touchend', function(e) {
-
-			Broadcast.call('Document Press Up', [e]);
-
-		});
-
-		document.addEventListener('touchmove', function(e) {
-
-			Broadcast.call('Document Move', [e]);
-
-		});
-
-	} else {
-
-		document.addEventListener('mousedown', function(e) {
-
-			Broadcast.call('Document Press Down', [e]);
-
-		});
-
-		document.addEventListener('mouseup', function(e) {
-
-			Broadcast.call('Document Press Up', [e]);
-
-		});
-
-		document.addEventListener('mousemove', function(e) {
-
-			Broadcast.call('Document Move', [e]);
-
-		});
-
-		document.addEventListener('wheel', function(e) {
-
-			Broadcast.call('Document Wheel', [e]);
-
-		});
-
-	}
-
-	document.addEventListener('keydown', function(e) {
-
-		Broadcast.call('Document Press Down', [e]);
-
-	});
-
-}
+if (typeof global == 'object') global.Broadcast = Broadcast;
