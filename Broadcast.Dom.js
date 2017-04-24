@@ -13,94 +13,94 @@ Broadcast.isTouchDevice = (('ontouchstart' in window) || (navigator.MaxTouchPoin
 
 if (Broadcast.isTouchDevice) {
 
-  document.addEventListener('touchstart', function(e) {
+	document.addEventListener('touchstart', function (e) {
 
-    Broadcast.call('Document Press Down', [e]);
+		Broadcast.call('Document Press Down', [e]);
 
-  });
+	});
 
-  document.addEventListener('touchend', function(e) {
+	document.addEventListener('touchend', function (e) {
 
-    Broadcast.call('Document Press Up', [e]);
+		Broadcast.call('Document Press Up', [e]);
 
-  });
+	});
 
-  document.addEventListener('touchmove', function(e) {
+	document.addEventListener('touchmove', function (e) {
 
-    Broadcast.call('Document Move', [e]);
+		Broadcast.call('Document Move', [e]);
 
-  });
+	});
 
 } else {
 
-  document.addEventListener('mousedown', function(e) {
+	document.addEventListener('mousedown', function (e) {
 
-    Broadcast.call('Document Press Down', [e]);
+		Broadcast.call('Document Press Down', [e]);
 
-  });
+	});
 
-  document.addEventListener('mouseup', function(e) {
+	document.addEventListener('mouseup', function (e) {
 
-    Broadcast.call('Document Press Up', [e]);
+		Broadcast.call('Document Press Up', [e]);
 
-  });
+	});
 
-  document.addEventListener('mousemove', function(e) {
+	document.addEventListener('mousemove', function (e) {
 
-    Broadcast.call('Document Move', [e]);
+		Broadcast.call('Document Move', [e]);
 
-  });
+	});
 
-  document.addEventListener('wheel', function(e) {
+	document.addEventListener('wheel', function (e) {
 
-    Broadcast.call('Document Wheel', [e]);
+		Broadcast.call('Document Wheel', [e]);
 
-  });
+	});
 
 }
 
 document.addEventListener('keydown', function (e) {
 
-  Broadcast.call('Document Key Down', [e]);
+	Broadcast.call('Document Key Down', [e]);
 
-  var keys = [];
+	var keys = [];
 
-  if (e.ctrlKey) keys.push('ctrl');
-  if (e.shiftKey) keys.push('shift');
-  if (e.altKey) keys.push('alt');
+	if (e.ctrlKey) keys.push('ctrl');
+	if (e.shiftKey) keys.push('shift');
+	if (e.altKey) keys.push('alt');
 
-  keys.push(e.key);
+	keys.push(e.key);
 
-  Broadcast.call(keys.join(' + ') + ' Down', [e]);
+	Broadcast.call(keys.join(' + ') + ' Down', [e]);
 
-  keys[keys.length - 1] = '<' + e.charCode + '>';
+	keys[keys.length - 1] = '<' + e.charCode + '>';
 
-  Broadcast.call(keys.join(' + ') + ' Down', [e]);
+	Broadcast.call(keys.join(' + ') + ' Down', [e]);
 
 });
 
 document.addEventListener('keyup', function (e) {
 
-  Broadcast.call('Document Key Up', [e]);
+	Broadcast.call('Document Key Up', [e]);
 
 });
 
 document.addEventListener('keypress', function (e) {
 
-  Broadcast.call('Document Key Press', [e]);
+	Broadcast.call('Document Key Press', [e]);
 
-  var keys = [];
+	var keys = [];
 
-  if (e.ctrlKey) keys.push('ctrl');
-  if (e.shiftKey) keys.push('shift');
-  if (e.altKey) keys.push('alt');
+	if (e.ctrlKey) keys.push('ctrl');
+	if (e.shiftKey) keys.push('shift');
+	if (e.altKey) keys.push('alt');
 
-  keys.push(e.key);
+	keys.push(e.key);
 
-  Broadcast.call(keys.join(' + '), [e]);
+	Broadcast.call(keys.join(' + '), [e]);
 
-  keys[keys.length - 1] = '<' + e.charCode + '>';
+	keys[keys.length - 1] = '<' + e.charCode + '>';
 
-  Broadcast.call(keys.join(' + '), [e]);
+	Broadcast.call(keys.join(' + '), [e]);
 
 });

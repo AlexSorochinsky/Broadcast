@@ -9,195 +9,180 @@
 // Broadcast.on('My event', my_func, this); Broadcast.call('My event'); Broadcast.off('My event', this);
 //-----------------------------------------------------------------------------
 
-//Main namespace for library use it for global events
-var Broadcast = {};
+(function() {
 
-//Implement Broadcast methods to custom object
-Broadcast.make = function(object) {
+	//Main namespace for library use it for global events
+	var Broadcast = {};
 
-	var prototype = Broadcast._prototype;
+	//Implement Broadcast methods to custom object
+	Broadcast.make = function(object) {
 
-	for (var i in prototype) if (prototype.hasOwnProperty(i)) {
+		var prototype = Broadcast._prototype;
 
-		if (object[i]) Broadcast._warn('Broadcast.make() warning! You try implement Broadcast functionality to custom object, but this object already have the same property.', object, i);
+		for (var i in prototype) if (prototype.hasOwnProperty(i)) {
 
-		object[i] = prototype[i];
+			if (object[i]) Broadcast._warn('Broadcast.make() warning! You try implement Broadcast functionality to custom object, but this object already have the same property.', object, i);
 
-	}
-
-	object._broadcast_events = {};
-
-	object._broadcast_timeouts = {};
-
-	object._broadcast_codename = 1;
-
-};
-
-Broadcast._warn = function() {
-
-	if (typeof console == 'object') {
-
-		if (console.warn) console.warn.apply(console, arguments);
-		else if (console.log) console.log.apply(console, arguments);
-
-	}
-
-};
-
-Broadcast._getSourceCodename = function(source) {
-
-	if (source._broadcast_codename) return source._broadcast_codename;
-
-	source._broadcast_codename = (source.displayName || source.name || source.Name || 'object') + (Broadcast._index++);
-
-	return source._broadcast_codename;
-
-};
-
-Broadcast._index = 1;
-
-Broadcast._prototype = {};
-
-Broadcast._prototype.on = function(name, caller, source, options) {
-
-	if (name.indexOf(',') != -1) name = _.map(name.split(','), function(name) {
-		return name.trim();
-	});
-
-	if (Array.isArray(name)) {
-
-		for (var i=0, l=name.length; i<l; i++) {
-
-			this.on(name[i], caller, source, options);
+			object[i] = prototype[i];
 
 		}
 
-	} else {
+		object._broadcast_events = {};
 
-		name = name.toLowerCase();
+		object._broadcast_timeouts = {};
 
-		if (!options) options = {};
+		object._broadcast_codename = 1;
 
-		if (typeof source == 'string') options.index = source;
+	};
 
-		else if (source) {
+	Broadcast._warn = function() {
 
-			if (!options.index) options.index = this._getSourceCodename(source);
+		if (typeof console == 'object') {
 
-			if (!options.bind) options.bind = source;
+			if (console.warn) console.warn.apply(console, arguments);
+			else if (console.log) console.log.apply(console, arguments);
 
 		}
 
-		if (options.index) {
+	};
 
-			if (!this._broadcast_events[name]) this._broadcast_events[name] = {};
+	Broadcast._getSourceCodename = function(source) {
 
-			this.off(name, options.index);
+		if (source._broadcast_codename) return source._broadcast_codename;
 
-			if (options && options.index && options.times) {
+		source._broadcast_codename = (source.displayName || source.name || source.Name || 'object') + (Broadcast._index++);
 
-				var original_func = caller, _this = this;
+		return source._broadcast_codename;
 
-				caller = function () {
+	};
 
-					var args = arguments;
+	Broadcast._index = 1;
 
-					if (!_this._broadcast_timeouts[name + '-' + options.index]) _this._broadcast_timeouts[name + '-' + options.index] = setTimeout(function () {
+	Broadcast._prototype = {};
 
-						_this._broadcast_timeouts[name + '-' + options.index] = null;
+	Broadcast._prototype.on = function(name, caller, source, options) {
 
-						_this._callSubscriber(original_func, options, args);
+		if (name.indexOf(',') != -1) name = _.map(name.split(','), function(name) {
+			return name.trim();
+		});
 
-					}, options.times);
+		if (Array.isArray(name)) {
+
+			for (var i=0, l=name.length; i<l; i++) {
+
+				this.on(name[i], caller, source, options);
+
+			}
+
+		} else {
+
+			name = name.toLowerCase();
+
+			if (!options) options = {};
+
+			if (typeof source == 'string') options.index = source;
+
+			else if (source) {
+
+				if (!options.index) options.index = this._getSourceCodename(source);
+
+				if (!options.bind) options.bind = source;
+
+			}
+
+			if (options.index) {
+
+				if (!this._broadcast_events[name]) this._broadcast_events[name] = {};
+
+				this.off(name, options.index);
+
+				if (options && options.index && options.times) {
+
+					var original_func = caller, _this = this;
+
+					caller = function () {
+
+						var args = arguments;
+
+						if (!_this._broadcast_timeouts[name + '-' + options.index]) _this._broadcast_timeouts[name + '-' + options.index] = setTimeout(function () {
+
+							_this._broadcast_timeouts[name + '-' + options.index] = null;
+
+							_this._callSubscriber(original_func, options, args);
+
+						}, options.times);
+
+					}
 
 				}
 
-			}
-
-			this._broadcast_events[name][options.index] = {caller: caller, options: options};
-
-		} else {
-
-			Broadcast._warn('Broadcast.on() warning! You need specify source of the event subscriber or index', name, caller, source, options);
-
-		}
-
-	}
-
-};
-
-Broadcast._prototype.off = function(name, source) {
-
-	if (!source) Broadcast._warn('Broadcast.off() warning! You need specify source of the event subscriber or index', name, source);
-
-	if (Array.isArray(name)) {
-
-		for (var i=0, l=name.length; i<l; i++) {
-
-			this.off(name[i], source);
-
-		}
-
-	} else {
-
-		name = name.toLowerCase();
-
-		var codename = (typeof source == 'string') ? source : this._getSourceCodename(source);
-
-		var callers = this._broadcast_events[name];
-		if (!callers || !callers[codename]) return;
-
-		delete callers[codename];
-
-	}
-
-};
-
-Broadcast._prototype.call = function(name, args, options, source) {
-
-	var _this = this;
-
-	if (options && options.delay) {
-
-		setTimeout(function () {
-
-			_this.call(name, args, options);
-
-		}, options.delay);
-
-		delete options.delay;
-
-	} else {
-
-		name = name.toLowerCase();
-
-		var subscriber, opt, callers = this._broadcast_events[name];
-
-		if (!callers) return;
-
-		if (source) {
-
-			var codename = (typeof source == 'string') ? source : this._getSourceCodename(source);
-
-			subscriber = callers[codename];
-			opt = callers[codename].options || {};
-
-			if (opt.delay) {
-
-				_this._delay_call(subscriber.caller, opt, args);
+				this._broadcast_events[name][options.index] = {caller: caller, options: options};
 
 			} else {
 
-				_this._call(subscriber.caller, opt, args);
+				Broadcast._warn('Broadcast.on() warning! You need specify source of the event subscriber or index', name, caller, source, options);
+
+			}
+
+		}
+
+	};
+
+	Broadcast._prototype.off = function(name, source) {
+
+		if (!source) Broadcast._warn('Broadcast.off() warning! You need specify source of the event subscriber or index', name, source);
+
+		if (Array.isArray(name)) {
+
+			for (var i=0, l=name.length; i<l; i++) {
+
+				this.off(name[i], source);
 
 			}
 
 		} else {
 
-			for (var i in callers) if (callers.hasOwnProperty(i)) {
+			name = name.toLowerCase();
 
-				subscriber = callers[i];
-				opt = callers[i].options || {};
+			var codename = (typeof source == 'string') ? source : this._getSourceCodename(source);
+
+			var callers = this._broadcast_events[name];
+			if (!callers || !callers[codename]) return;
+
+			delete callers[codename];
+
+		}
+
+	};
+
+	Broadcast._prototype.call = function(name, args, options, source) {
+
+		var _this = this;
+
+		if (options && options.delay) {
+
+			setTimeout(function () {
+
+				_this.call(name, args, options);
+
+			}, options.delay);
+
+			delete options.delay;
+
+		} else {
+
+			name = name.toLowerCase();
+
+			var subscriber, opt, callers = this._broadcast_events[name];
+
+			if (!callers) return;
+
+			if (source) {
+
+				var codename = (typeof source == 'string') ? source : this._getSourceCodename(source);
+
+				subscriber = callers[codename];
+				opt = callers[codename].options || {};
 
 				if (opt.delay) {
 
@@ -209,38 +194,71 @@ Broadcast._prototype.call = function(name, args, options, source) {
 
 				}
 
+			} else {
+
+				for (var i in callers) if (callers.hasOwnProperty(i)) {
+
+					subscriber = callers[i];
+					opt = callers[i].options || {};
+
+					if (opt.delay) {
+
+						_this._delay_call(subscriber.caller, opt, args);
+
+					} else {
+
+						_this._call(subscriber.caller, opt, args);
+
+					}
+
+				}
+
 			}
 
 		}
 
+	};
+
+	Broadcast._prototype._delay_call = function (caller, options, args) {
+
+		var _this = this;
+
+		if (!options.delayTimeout) {
+
+			options.delayTimeout = setTimeout(function () {
+
+				_this._call(caller, options, args);
+
+				options.delayTimeout = null;
+
+			}, options.delay);
+
+		}
+
+	};
+
+	Broadcast._prototype._call = function (caller, options, args) {
+
+		caller.apply(options.bind || this, args || []);
+
+	};
+
+	Broadcast.make(Broadcast);
+
+	var namespace = null;
+
+	if (typeof global == 'object') namespace = global;
+
+	if (typeof window == 'object') namespace = window;
+
+	if (namespace) {
+
+		namespace.__brdcst = Broadcast;
+
+		if (!namespace.Broadcast) namespace.Broadcast = Broadcast;
+
+		else console.info('Broadcast.make() warning! Global Broadcast namespace already in use. Use __brdcst.make(object) to implement Broadcast functionality to custom object.');
+
 	}
 
-};
-
-Broadcast._prototype._delay_call = function (caller, options, args) {
-
-	var _this = this;
-
-	if (!options.delayTimeout) {
-
-		options.delayTimeout = setTimeout(function () {
-
-			_this._call(caller, options, args);
-
-			options.delayTimeout = null;
-
-		}, options.delay);
-
-	}
-
-};
-
-Broadcast._prototype._call = function (caller, options, args) {
-
-	caller.apply(options.bind || this, args || []);
-
-};
-
-Broadcast.make(Broadcast);
-
-if (typeof global == 'object') global.Broadcast = Broadcast;
+})();
